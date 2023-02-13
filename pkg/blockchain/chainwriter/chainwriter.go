@@ -97,14 +97,39 @@ func (cw *ChainWriter) StoreBlock(bl *block.Block, undoBlock *UndoBlock, height 
 // a FileInfo for storage information.
 func (cw *ChainWriter) WriteBlock(serializedBlock []byte) *FileInfo {
 	// TODO: Implement this function
-	return nil
+	// make sure sizing is correct
+	if cw.CurrentBlockOffset+uint32(len(serializedBlock)) > cw.MaxBlockFileSize {
+		cw.CurrentBlockFileNumber = cw.CurrentBlockFileNumber + 1 // increase size by 1
+		cw.CurrentBlockOffset = 0
+	}
+
+	// get full filepath
+	filepath := cw.DataDirectory + "/" + cw.BlockFileName + "_" + string(cw.CurrentBlockFileNumber) + "." + cw.FileExtension
+	// current block offset -> the amount of data that is currently in any given file
+	// data = serializedBlock bytes
+	writeToDisk(filepath, serializedBlock)
+	file := &FileInfo{filepath, cw.CurrentBlockOffset, cw.CurrentBlockOffset + uint32(len(serializedBlock))}
+	cw.CurrentBlockOffset += uint32(len(serializedBlock))
+	return file
 }
 
 // WriteUndoBlock writes a serialized UndoBlock to Disk and returns
 // a FileInfo for storage information.
 func (cw *ChainWriter) WriteUndoBlock(serializedUndoBlock []byte) *FileInfo {
 	// TODO: Implement this function
-	return nil
+	// make sure sizing is correct
+	if cw.CurrentUndoOffset+uint32(len(serializedUndoBlock)) > cw.MaxUndoFileSize {
+		cw.CurrentUndoFileNumber = cw.CurrentUndoFileNumber + 1 // increase size by 1
+		cw.CurrentUndoOffset = 0
+	}
+	// get full filepath
+	filepath := cw.DataDirectory + "/" + cw.UndoFileName + "_" + string(cw.CurrentUndoFileNumber) + "." + cw.FileExtension
+	// current block offset -> the amount of data that is currently in any given file
+	// data = serializedBlock bytes
+	writeToDisk(filepath, serializedUndoBlock)
+	file := &FileInfo{filepath, cw.CurrentUndoOffset, cw.CurrentUndoOffset + uint32(len(serializedUndoBlock))}
+	cw.CurrentUndoOffset += uint32(len(serializedUndoBlock))
+	return file
 }
 
 // ReadBlock returns a Block given a FileInfo.
