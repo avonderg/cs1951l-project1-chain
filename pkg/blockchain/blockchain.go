@@ -87,8 +87,10 @@ func GenesisBlock(config *Config) *block.Block {
 // (5) Updates the BlockChain's fields.
 func (bc *BlockChain) HandleBlock(b *block.Block) {
 	// TODO: Implement this function
-	bc.validate(b)
-	bc.store(b)
+	if bc.CoinDB.ValidateBlock(b.Transactions) {
+		bc.validate(b)
+		bc.store(b)
+	}
 }
 
 func (bc *BlockChain) validate(b *block.Block) {
