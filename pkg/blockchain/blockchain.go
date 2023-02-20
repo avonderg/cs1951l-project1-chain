@@ -87,6 +87,46 @@ func GenesisBlock(config *Config) *block.Block {
 // (5) Updates the BlockChain's fields.
 func (bc *BlockChain) HandleBlock(b *block.Block) {
 	// TODO: Implement this function
+	bc.validate(b)
+	bc.store(b)
+}
+
+func (bc *BlockChain) validate(b *block.Block) {
+	if bc.CoinDB.ValidateBlock(b.Transactions) {
+		if !bc.appendsToActiveChain(b) { // if it doesn't append to active chain
+			index := bc.forks(b, bc.getForkedBlocks(bc.LastHash))
+			if index > -1 {
+				blocks, undos := bc.getBlocksAndUndoBlocks(index)
+				bc.LastHash = bc.getForkedBlocks(bc.LastHash)[index].Hash()
+				bc.LastBlock = bc.getBlock(bc.LastHash)
+				bc.Length = bc.Length - uint32(index)
+				bc.UnsafeHashes = bc.UnsafeHashes[index:]
+				bc.CoinDB.UndoCoins(blocks, undos)
+			}
+		}
+	}
+}
+
+func (bc *BlockChain) store(b *block.Block) {
+	undoBlock := bc.makeUndoBlock(b.Transactions)
+	bc.CoinDB.StoreBlock(b.Transactions)
+	record := bc.ChainWriter.StoreBlock(b, undoBlock, bc.Length)
+	// update fields
+	bc.BlockInfoDB.StoreBlockRecord(b.Hash(), record)
+	bc.LastHash = b.Hash()
+	bc.LastBlock = b
+	bc.Length = bc.Length + 1
+	bc.UnsafeHashes = append([]string{bc.LastHash}, bc.UnsafeHashes...)
+}
+
+// forks returns the index of a forked block, and -1 if none was found
+func (bc *BlockChain) forks(b *block.Block, fb []*block.Block) int {
+	for i, forked := range fb {
+		if (forked.Hash() == b.Header.PreviousHash) && (i != 0) {
+			return i
+		}
+	}
+	return -1 // if no forked block was found
 }
 
 // makeUndoBlock returns an UndoBlock given a slice of Transactions.
