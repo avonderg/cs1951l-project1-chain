@@ -98,9 +98,8 @@ func (coinDB *CoinDatabase) eraseCoins(blockTransactions []*block.Transaction) {
 			if _, ok := coinDB.MainCache[cl]; ok {
 				delete(coinDB.MainCache, cl)
 				coinDB.MainCacheSize = coinDB.MainCacheSize - 1 // decrease size of main cace
-			} else { // otherwise, remove it from DB
-				coinDB.removeCoinFromDB(transac.Hash(), cl)
 			}
+			coinDB.removeCoinFromDB(transac.Hash(), cl)
 		}
 	}
 }
