@@ -5,6 +5,7 @@ import (
 	"Chain/pkg/blockchain/blockinfodatabase"
 	"Chain/pkg/pro"
 	"Chain/pkg/utils"
+	"fmt"
 	"log"
 	"os"
 
@@ -104,7 +105,7 @@ func (cw *ChainWriter) WriteBlock(serializedBlock []byte) *FileInfo {
 	}
 
 	// get full filepath
-	filepath := cw.DataDirectory + "/" + cw.BlockFileName + "_" + string(cw.CurrentBlockFileNumber) + "." + cw.FileExtension
+	filepath := cw.DataDirectory + "/" + cw.BlockFileName + "_" + fmt.Sprint(cw.CurrentBlockFileNumber) + "." + cw.FileExtension
 	// current block offset -> the amount of data that is currently in any given file
 	// data = serializedBlock bytes
 	writeToDisk(filepath, serializedBlock)
@@ -123,7 +124,7 @@ func (cw *ChainWriter) WriteUndoBlock(serializedUndoBlock []byte) *FileInfo {
 		cw.CurrentUndoOffset = 0
 	}
 	// get full filepath
-	filepath := cw.DataDirectory + "/" + cw.UndoFileName + "_" + string(cw.CurrentUndoFileNumber) + "." + cw.FileExtension
+	filepath := cw.DataDirectory + "/" + cw.UndoFileName + "_" + fmt.Sprint(cw.CurrentUndoFileNumber) + "." + cw.FileExtension
 	// current block offset -> the amount of data that is currently in any given file
 	// data = serializedBlock bytes
 	writeToDisk(filepath, serializedUndoBlock)
