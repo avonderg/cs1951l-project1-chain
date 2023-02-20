@@ -219,7 +219,7 @@ func (coinDB *CoinDatabase) storeNew(transaction *block.Transaction) {
 // step (3) stores CoinRecords for the Transactions in the db.
 func (coinDB *CoinDatabase) storeRec(transaction *block.Transaction) {
 	// TODO: implement this function
-	if coinDB.MainCacheCapacity == coinDB.MainCacheSize { // check if it is at capacity
+	if coinDB.MainCacheCapacity < coinDB.MainCacheSize { // check if it is at capacity
 		coinDB.FlushMainCache()
 	}
 	rec := coinDB.createCoinRecord(transaction)
