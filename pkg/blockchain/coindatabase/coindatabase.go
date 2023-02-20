@@ -81,9 +81,11 @@ func (coinDB *CoinDatabase) validateTransaction(transaction *block.Transaction) 
 // (2) marks the Coins used to create those Transactions as unspent.
 func (coinDB *CoinDatabase) UndoCoins(blocks []*block.Block, undoBlocks []*chainwriter.UndoBlock) {
 	// TODO: Implement this function
-	for i, block := range blocks {
-		coinDB.eraseCoins(block.Transactions)
-		coinDB.markCoins(undoBlocks[i])
+	if len(blocks) == len(undoBlocks) {
+		for i, block := range blocks {
+			coinDB.eraseCoins(block.Transactions)
+			coinDB.markCoins(undoBlocks[i])
+		}
 	}
 }
 
