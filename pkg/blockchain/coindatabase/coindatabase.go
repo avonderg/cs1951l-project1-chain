@@ -211,8 +211,8 @@ func (coinDB *CoinDatabase) storeNew(transaction *block.Transaction) {
 	for j, output := range transaction.Outputs {
 		cl := CoinLocator{transaction.Hash(), uint32(j)} // make new coin locator
 		coin := &Coin{output, false}
-		coinDB.MainCacheSize += 1
 		coinDB.MainCache[cl] = coin
+		coinDB.MainCacheSize += 1
 	}
 }
 
