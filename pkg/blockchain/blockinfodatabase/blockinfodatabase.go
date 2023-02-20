@@ -46,7 +46,8 @@ func (blockInfoDB *BlockInfoDatabase) GetBlockRecord(hash string) *BlockRecord {
 	// retrieve block from database
 
 	m_protobuf, _ := blockInfoDB.db.Get([]byte(hash), nil) // do i do something if err is not nil? do i return err
-	var protobuf *pro.BlockRecord
+	//var protobuf *pro.BlockRecord
+	protobuf := new(pro.BlockRecord)
 	proto.Unmarshal(m_protobuf, protobuf) // result is placed in protobuf
 	// convert protobuf back into block record
 	block := DecodeBlockRecord(protobuf)
