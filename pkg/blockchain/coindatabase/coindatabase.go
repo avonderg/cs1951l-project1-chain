@@ -115,7 +115,6 @@ func (coinDB *CoinDatabase) markCoins(undoBlock *chainwriter.UndoBlock) {
 		cr := coinDB.getCoinRecordFromDB(tHash)
 		coinDB.addCoinToRecord(cr, undoBlock, i)
 		coinDB.putRecordInDB(tHash, cr)
-
 	}
 }
 
@@ -213,6 +212,7 @@ func (coinDB *CoinDatabase) storeNew(transaction *block.Transaction) {
 		cl := CoinLocator{transaction.Hash(), uint32(j)} // make new coin locator
 		coin := &Coin{output, false}
 		coinDB.MainCache[cl] = coin
+		coinDB.MainCacheSize += 1
 	}
 }
 
