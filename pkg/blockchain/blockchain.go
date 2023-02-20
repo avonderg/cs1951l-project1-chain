@@ -119,11 +119,6 @@ func (bc *BlockChain) store(b *block.Block) {
 	bc.LastBlock = b
 	bc.Length = bc.Length + 1
 	bc.UnsafeHashes = append([]string{bc.LastHash}, bc.UnsafeHashes...)
-
-	//// check if length too long
-	//if bc.maxHashes < len(bc.UnsafeHashes) {
-	//	bc.UnsafeHashes = bc.UnsafeHashes[:bc.maxHashes] // slice only what it can store
-	//}
 }
 
 // forks returns the index of a forked block, and -1 if none was found
