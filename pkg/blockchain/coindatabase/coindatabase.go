@@ -81,6 +81,41 @@ func (coinDB *CoinDatabase) validateTransaction(transaction *block.Transaction) 
 // (2) marks the Coins used to create those Transactions as unspent.
 func (coinDB *CoinDatabase) UndoCoins(blocks []*block.Block, undoBlocks []*chainwriter.UndoBlock) {
 	// TODO: Implement this function
+	for i, block := range blocks {
+		coinDB.eraseCoins(block.Transactions)
+		coinDB.markCoins(undoBlocks[i])
+	}
+}
+
+// step (1) erases the Coins created by a Block
+func (coinDB *CoinDatabase) eraseCoins(blockTransactions []*block.Transaction) {
+	for _, transac := range blockTransactions {
+		cr := coinDB.getCoinRecordFromDB(transac.Hash()) // is the hash correct
+		for _, i := range cr.OutputIndexes {
+			cl := CoinLocator{transac.Hash(), i} // make coin locator
+			if _, ok := coinDB.MainCache[cl]; ok {
+				delete(coinDB.MainCache, cl)
+				coinDB.MainCacheSize = coinDB.MainCacheSize - 1 // decrease size of main cace
+			} else { // otherwise, remove it from DB
+				coinDB.removeCoinFromDB(transac.Hash(), cl)
+			}
+		}
+	}
+}
+
+// step (2) marks the Coins used to create those Transactions as unspent.
+func (coinDB *CoinDatabase) markCoins(undoBlock *chainwriter.UndoBlock) {
+	for i, tHash := range undoBlock.TransactionInputHashes {
+		j := undoBlock.OutputIndexes[i]
+		cl := CoinLocator{tHash, j}
+		if coin, ok := coinDB.MainCache[cl]; ok {
+			coin.IsSpent = false
+		}
+		cr := coinDB.getCoinRecordFromDB(tHash)
+		coinDB.addCoinToRecord(cr, undoBlock, i)
+		coinDB.putRecordInDB(tHash, cr)
+
+	}
 }
 
 // addCoinToRecord adds a Coin to a CoinRecord given an UndoBlock and index,
@@ -145,6 +180,49 @@ func (coinDB *CoinDatabase) FlushMainCache() {
 // We recommend you write a helper function for each subtask.
 func (coinDB *CoinDatabase) StoreBlock(transactions []*block.Transaction) {
 	// TODO: implement this function
+	for _, tr := range transactions {
+		coinDB.removeSpent(tr) // 1
+		coinDB.storeNew(tr)    // 2
+		coinDB.storeRec(tr)    // 3
+	}
+}
+
+// step (1): removes spent TransactionOutputs
+func (coinDB *CoinDatabase) removeSpent(transaction *block.Transaction) {
+	// TODO: implement this function
+	// loop through  transaction's inptus and find coinlocator
+	for _, input := range transaction.Inputs {
+		// get coin locator
+		cl := makeCoinLocator(input)
+		if coin, ok := coinDB.MainCache[cl]; ok {
+			// mark coin as spent if it is in main cache
+			// do i have to check if it has already been spent
+			coin.IsSpent = true
+		} else { // otherwise, remove it from DB
+			coinDB.removeCoinFromDB(input.ReferenceTransactionHash, cl)
+		}
+	}
+}
+
+// step (2) stores new TransactionOutputs as Coins in the mainCache
+func (coinDB *CoinDatabase) storeNew(transaction *block.Transaction) {
+	// TODO: implement this function
+	// loop through each transaction's outputs and find coinlocator
+	for j, output := range transaction.Outputs {
+		cl := CoinLocator{transaction.Hash(), uint32(j)} // make new coin locator
+		coin := &Coin{output, false}
+		coinDB.MainCache[cl] = coin
+	}
+}
+
+// step (3) stores CoinRecords for the Transactions in the db.
+func (coinDB *CoinDatabase) storeRec(transaction *block.Transaction) {
+	// TODO: implement this function
+	if coinDB.MainCacheCapacity == coinDB.MainCacheSize { // check if it is at capacity
+		coinDB.FlushMainCache()
+	}
+	rec := coinDB.createCoinRecord(transaction)
+	coinDB.putRecordInDB(transaction.Hash(), rec)
 }
 
 // removeCoinFromDB removes a Coin from a CoinRecord, deleting the CoinRecord
